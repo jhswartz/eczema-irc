@@ -1,0 +1,31 @@
+eczema/irc 0.1
+
+
+SET YOUR NICK, USERNAME AND "REAL NAME" 
+
+  "GeckoExcrement" "geckoffee" "100% Certified Organic" IDENTITY!
+
+
+CONNECT TO AN IRC SERVER EXPOSED VIA WEB SOCKET
+
+  "ws://127.0.0.1:9000" CONNECT Socket !
+
+  Take the URI from your favourite IRC network's webchat,
+  or spawn a websocket server (eg: websocketd + socat) that
+  will forward a connection to your prefered IRC server instead.
+
+
+INTERACTION
+
+  Review the SEND command and the "commands.es" file.
+
+
+HIGHLIGHTING
+
+  "#ec2" "##forth"        TargetColour !
+  "#ce2" "GeckoExcrement" TargetColour !
+
+
+TRY IT OUT
+
+  https://risingedge.co.za/eczema/irc/
