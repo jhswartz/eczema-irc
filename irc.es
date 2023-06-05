@@ -12,7 +12,7 @@ VARIABLE Socket
 
 : SEND { message -- }
   message 1 "send" Socket ? METHOD
-  message OutboundColour #view MESSAGE ;
+  message OutboundColour #view TEXT ;
 
 : IDENTITY! { nick user name -- }
   nick YourNick ! user YourUser ! name YourName ! ;
@@ -22,7 +22,7 @@ VARIABLE Socket
   <[ "USER " YourUser ? " 0 0 :" YourName ? ]> "" JOIN SEND ;
 
 : WHEN-CLOSED { event -- }
-  "Disconnected!" AlertColour #view MESSAGE ;
+  "Disconnected!" AlertColour #view TEXT ;
 
 : CONNECT { uri -- web-socket }
   uri WEB-SOCKET         { web-socket }

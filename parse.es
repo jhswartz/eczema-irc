@@ -8,18 +8,18 @@ OBJECT VALUE ChannelUsers
 
 : PARSE-MOVEMENT { source type target remaining -- }
   ARRAY target ChannelUsers !
-  <[ target type source ]> " " JOIN { message }
-  message target #view DISPLAY-MESSAGE ;
+  <[ type source ]> " " JOIN { message }
+  message target #view MESSAGE ;
 
 : PARSE-TOPIC { source type target remaining -- }
-  0 remaining ?                        { channel }
-  1 remaining SLICE " " JOIN           { topic }
-  <[ channel "TOPIC" topic ]> " " JOIN { message }
-  message channel #view DISPLAY-MESSAGE ;
+  0 remaining ?                { channel }
+  1 remaining SLICE " " JOIN   { topic }
+  <[ "TOPIC" topic ]> " " JOIN { message }
+  message channel #view MESSAGE ;
 
 : PARSE-MODE { source type target remaining -- }
-  <[ target "MODE" source remaining ]> " " JOIN { message }
-  message target #view DISPLAY-MESSAGE ;
+  <[ "MODE" remaining ]> " " JOIN { message }
+  message target #view MESSAGE ;
 
 : PARSE-NICK { source -- }
   source "!" SPLIT { tokens }
@@ -40,40 +40,8 @@ OBJECT VALUE ChannelUsers
   1 remaining " " JOIN SLICE { text }
   source PARSE-NICK          { nick }
   type nick ADORN-NICK       { from }
-
-  target YourNick ? = IF
-    <[ from text ]> " " JOIN { message }
-  ELSE
-    <[ target from text ]> " " JOIN { message }
-  THEN
-
-  message target #view DISPLAY-MESSAGE ;
-
-: PARSE-PRIVMSG { source type target remaining -- }
-  1 remaining " " JOIN SLICE           { text }
-  source PARSE-NICK                    { sender }
-  "<" source PARSE-NICK ">" 3 "" MERGE { from }
-
-  target NICK ? = IF
-    <[ from text ]> " " JOIN { message }
-  ELSE
-    <[ target from text ]> " " JOIN { message }
-  THEN
-
-  message target #view DISPLAY-MESSAGE ;
-
-: PARSE-NOTICE { source type target remaining -- }
-  1 remaining " " JOIN SLICE           { text }
-  source PARSE-NICK                    { sender }
-  "(" source PARSE-NICK ")" 3 "" MERGE { from }
-
-  target YourNick ? = IF
-    <[ from text ]> " " JOIN { message }
-  ELSE
-    <[ target from text ]> " " JOIN { message }
-  THEN
-
-  message target #view DISPLAY-MESSAGE ;
+  <[ from text ]> " " JOIN   { message }
+  message target #view MESSAGE ;
 
 : PARSE-NAMES { source type target remaining -- }
   1 remaining ?          { channel }
@@ -87,8 +55,8 @@ OBJECT VALUE ChannelUsers
 : PARSE-END-NAMES { source type target remaining -- }
   0 remaining ?                        { channel }
   channel ChannelUsers ? SORT " " JOIN { users }
-  <[ channel "USERS" users ]> " " JOIN { message }
-  message channel #view DISPLAY-MESSAGE ;
+  <[ "USERS" users ]> " " JOIN { message }
+  message channel #view MESSAGE ;
 
 : IGNORE-LINE { source type target remaining -- } ;
 
@@ -123,6 +91,6 @@ VALUE LineTypes
     source type target remaining parser PARSE EXIT
   THEN
 
-  data target #view DISPLAY-MESSAGE ;
+  data target #view MESSAGE ;
 
 `);

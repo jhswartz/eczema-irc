@@ -11,27 +11,41 @@ OBJECT VALUE TargetColour
 : SCROLL-VIEW ( -- )
   "scrollHeight" #view ? "scrollTop" #view ! ;
 
-: MESSAGE-ELEMENT { text colour -- }
+: TEXT>ELEMENT { text colour -- element }
   "p" CREATE-ELEMENT { element }
   colour "color" element STYLE? !
   text element APPEND
   element ;
 
-: MESSAGE { message colour panel -- }
-  message colour MESSAGE-ELEMENT { element }
+: TEXT { message colour panel -- }
+  message colour TEXT>ELEMENT { element }
   element panel APPEND
   SCROLL-VIEW ;
 
-: MESSAGE-COLOUR? { target -- }
+: TARGET-COLOUR? { target -- }
   target TargetColour KEYS CONTAINS IF
     target TargetColour ?
   ELSE
     InboundColour
   THEN ;
 
-: DISPLAY-MESSAGE { message target panel -- }
-  target MESSAGE-COLOUR? { colour }
-  message colour panel MESSAGE ;
+: TARGET>ELEMENT { target -- element }
+  "span" CREATE-ELEMENT { element }
+  target TARGET-COLOUR? { colour }
+  colour "color" element STYLE? !
+  <[ target " " ]> "" JOIN element APPEND
+  element ;
+
+: MESSAGE>ELEMENT { text target -- element }
+  target TARGET>ELEMENT { targetElement }
+  text InboundColour TEXT>ELEMENT { element }
+  targetElement element PREPEND
+  element ;
+
+: MESSAGE { message target panel -- }
+  message target MESSAGE>ELEMENT { element }
+  element panel APPEND
+  SCROLL-VIEW ;
 
 "WORDS?" READ
 
