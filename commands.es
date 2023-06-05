@@ -24,4 +24,7 @@ system.parse(`
 : /who { channel -- }
   <[ "WHO" channel ]> " " JOIN SEND ;
 
+: /nick { nick -- }
+  <[ "NICK" nick ]> " " JOIN SEND ;
+
 `);
