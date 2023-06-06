@@ -91,6 +91,6 @@ VALUE LineTypes
     source type target remaining parser PARSE EXIT
   THEN
 
-  data target #view MESSAGE ;
+  data InboundColour #view TEXT ;
 
 `);
