@@ -673,6 +673,11 @@ CODE: !
 : MERGE { count glue -- string }
   count :ARRAY glue JOIN ;
 
+: FIT { string form -- fitted }
+  form string +   { composite }
+  form COUNT -1 * { index }
+  index 1 "slice" composite METHOD ;
+
 : SPLIT { string delimiter -- array }
   delimiter 1 "split" string METHOD ;
 
