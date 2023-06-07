@@ -10,14 +10,25 @@ CONNECT TO AN IRC SERVER EXPOSED VIA WEB SOCKET
 
   "ws://127.0.0.1:9000" CONNECT Socket !
 
-  Take the URI from your favourite IRC network's webchat,
-  or spawn a websocket server (eg: websocketd + socat) that
-  will forward a connection to your prefered IRC server instead.
+  Take the websocket URI from your favourite IRC network's webchat,
+  or spawn a websocket server (eg: websocketd + socat) that will
+  forward a connection to your prefered IRC server instead.
 
 
 INTERACTION
 
-  Review the SEND command and the "commands.es" file.
+  + Raw Commands via SEND
+
+    "PRIVMSG UptightUser :unsolicited message!" SEND
+
+  + Dedicated Command Words 
+
+    "#channel" /join
+    "#channel" /who
+    "nick" /whois
+    "artisanally handcrafted spam!" "HipsterInASafariSuit" /msg
+
+    See "commands.es" for more information.
 
 
 HIGHLIGHTING
