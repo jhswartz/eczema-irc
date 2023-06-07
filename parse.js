@@ -1,13 +1,13 @@
 system.parse(`
 
-OBJECT VALUE ChannelUsers
+VARIABLE Names ARRAY Names !
+OBJECT VALUE Users
 
 : PONG { type -- }
   <[ "PONG" type ]> " " JOIN { message }
   message 1 "send" Socket ? METHOD ;
 
 : PARSE-MOVEMENT { source type target remaining -- }
-  ARRAY target ChannelUsers !
   <[ type source ]> " " JOIN { message }
   message target #view MESSAGE ;
 
@@ -44,19 +44,44 @@ OBJECT VALUE ChannelUsers
   message target #view MESSAGE ;
 
 : PARSE-NAMES { source type target remaining -- }
-  1 remaining ?          { channel }
-  2 remaining SLICE      { users }
-  1 0 users ? SLICE      { first }
+  1 remaining ?     { channel }
+  2 remaining SLICE { users }
+  1 0 users ? SLICE { first }
   first 0 users !
-  channel ChannelUsers ? { existing }
-  users existing CONCAT  { users }
-  users channel ChannelUsers ! ;
+  users Names ? CONCAT Names ! ;
 
 : PARSE-END-NAMES { source type target remaining -- }
-  0 remaining ?                        { channel }
-  channel ChannelUsers ? SORT " " JOIN { users }
+  0 remaining ?         { channel }
+  Names ? SORT " " JOIN { users }
+
   <[ "USERS" users ]> " " JOIN { message }
-  message channel #view MESSAGE ;
+  message channel #view MESSAGE
+  ARRAY Names ! ;
+
+: PARSE-WHO { source type target remaining -- }
+  0 remaining ? { channel }
+  4 remaining ? { nick }
+  <{
+    "username" 1 remaining ?
+    "address"  2 remaining ?
+    "info"     7 remaining SLICE " " JOIN
+  }> nick Users ! ;
+
+: PARSE-END-WHO { source type target remaining -- }
+  0 remaining ?   { channel }
+  Users KEYS SORT { nicks }
+
+  BEGIN nicks COUNT WHILE
+    nicks POP    { nick }
+    nick Users ? { user }
+    <[
+      "WHO" nick
+      "username" user ?
+      "address"  user ?
+      "info"     user ?
+    ]> " " JOIN channel #view MESSAGE
+    nick Users DELETE
+  REPEAT ;
 
 : IGNORE-LINE { source type target remaining -- } ;
 
@@ -69,6 +94,8 @@ OBJECT VALUE ChannelUsers
    "332"     "PARSE-TOPIC"
    "353"     "PARSE-NAMES"
    "366"     "PARSE-END-NAMES"
+   "352"     "PARSE-WHO"
+   "315"     "PARSE-END-WHO"
    "318"     "IGNORE-LINE"
    "333"     "IGNORE-LINE"
 }>
