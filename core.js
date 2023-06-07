@@ -626,6 +626,12 @@ CODE: VALUES
   system.data.push(Object.values(object));
 ;
 
+CODE: DELETE
+  let object = system.data.pop();
+  let attribute = system.data.pop();
+  delete object[attribute];
+;
+
 CODE: ?
   let object = system.data.pop();
   let key = system.data.pop();
