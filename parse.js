@@ -1,6 +1,6 @@
 system.parse(`
 
-VARIABLE Names ARRAY Names !
+OBJECT VALUE Names
 OBJECT VALUE Users
 
 : PONG { type -- }
@@ -45,18 +45,23 @@ OBJECT VALUE Users
 
 : PARSE-NAMES { source type target remaining -- }
   1 remaining ?     { channel }
-  2 remaining SLICE { users }
-  1 0 users ? SLICE { first }
-  first 0 users !
-  users Names ? CONCAT Names ! ;
+  channel Names ?   { existing }
+  2 remaining SLICE { names }
+  1 0 names ? SLICE { first }
+  first 0 names !
+
+  existing IF
+    existing names CONCAT { names }
+  THEN
+
+  names channel Names ! ;
 
 : PARSE-END-NAMES { source type target remaining -- }
-  0 remaining ?         { channel }
-  Names ? SORT " " JOIN { users }
-
-  <[ "USERS" users ]> " " JOIN { message }
+  0 remaining ?                 { channel }
+  channel Names ? SORT " " JOIN { names }
+  <[ "NAMES" names ]> " " JOIN  { message }
   message channel #view MESSAGE
-  ARRAY Names ! ;
+  ARRAY channel Names ! ;
 
 : PARSE-WHO { source type target remaining -- }
   0 remaining ? { channel }
