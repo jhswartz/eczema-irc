@@ -19,10 +19,13 @@ system.parse(`
   <[ "NOTICE " target " :" message ]> "" JOIN SEND ; 
 
 : /whois { nick -- }
-  <[ "WHOIS" nick ]> " " JOIN SEND ; 
+  <[ "WHOIS" nick nick ]> " " JOIN SEND ;
 
 : /who { channel -- }
   <[ "WHO" channel ]> " " JOIN SEND ;
+
+: /names { channel -- }
+  <[ "NAMES" channel ]> " " JOIN SEND ;
 
 : /nick { nick -- }
   <[ "NICK" nick ]> " " JOIN SEND ;
