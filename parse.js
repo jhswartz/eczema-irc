@@ -115,12 +115,14 @@ VALUE LineTypes
   3 tokens SLICE { remaining }
 
   source "PING" = IF
-    type PONG EXIT
+    type PONG
+    EXIT
   THEN
- 
+
   type LineTypes KEYS CONTAINS IF
     type LineTypes ? { parser }
-    source type target remaining parser PARSE EXIT
+    source type target remaining parser EVALUATE
+    EXIT
   THEN
 
   data InboundColour #view TEXT ;
