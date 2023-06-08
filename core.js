@@ -335,8 +335,8 @@ class SystemError extends Error {
 class System {
   constructor() {
     this.mode    = Interpret; 
-    this.input   = new Input();
     this.console = new Console();
+    this.input   = new Stack("input");
     this.aux     = new Stack("aux");
     this.data    = new Stack("data");
     this.frames  = new Stack("frames");
@@ -347,14 +347,15 @@ class System {
   }
 
   parse(source) {
-    this.input.update(source);
+    this.input.push(new Input(source));
     let token;
     do { 
-      token = this.input.next();
+      token = this.input.top().next();
       if (token) {
          this.evaluate(token);
       }
     } while (token);
+    this.input.drop();
   }
 
   evaluate(token) {
@@ -421,10 +422,11 @@ class System {
   }
 
   error(message) {
+    let input = this.input.top();
     throw new SystemError(message, {
       cause: {
-        "offset": this.input.offset,
-        "text": this.input.text
+        "offset": input.offset,
+        "text": input.text
       }
     });
   }
@@ -434,13 +436,15 @@ class System {
 
     this.book.add(
       new Word(Direct, "CREATE", [
-        "system.book.add(new Word(Indirect, system.input.next()));"
+        "let input = system.input.top();",
+        "system.book.add(new Word(Indirect, input.next()));"
       ])
     );
     
     this.book.add(
       new Word(Direct, "POSTPONE", [
-        "system.book.word.append(system.input.next());"
+        "let input = system.input.top();",
+        "system.book.word.append(input.next());"
       ], true)
     );
     
@@ -489,30 +493,38 @@ CREATE : ] POSTPONE CREATE POSTPONE ] ;
 : CODE: CREATE POSTPONE CODE POSTPONE ] ;
 
 CODE: MACRO:
-  system.book.add(new Word(Indirect, system.input.next()));
+  let input = system.input.top();
+  system.book.add(new Word(Indirect, input.next()));
   system.book.word.immediate = true;
   let token;
-  while ((token = system.input.next()) !== ";") {
+  while ((token = input.next()) !== ";") {
     system.book.word.append(token);
   }
 ;
 
 CODE: \\
-  system.input.skipLine();
+  let input = system.input.top();
+  input.skipLine();
 ; IMMEDIATE
 
 CODE: (
-  while (system.input.next() !== ")");
+  let input = system.input.top();
+  while (input.next() !== ")");
 ; IMMEDIATE
 
-CODE: PARSE 
+CODE: EVALUATE 
   system.parse(system.data.pop());
+;
+
+CODE: ENCODE
+  let source = system.data.pop();
+  system.data.push(\`system.parse('\${source}');\`);
 ;
 
 
 \\ ECMAScript
 
-CODE: :CODE
+CODE: EVAL
   system.data.push(eval(system.data.pop()));
 ;
 
@@ -570,7 +582,7 @@ CODE: METHOD
 CODE: UNDEFINED
   system.data.push(undefined);
 ;
- 
+
 CODE: OBJECT
   system.data.push({});
 ;
@@ -621,7 +633,7 @@ CODE: KEYS
   system.data.push(Object.keys(object));
 ;
 
-CODE: VALUES 
+CODE: VALUES
   let object = system.data.pop();
   system.data.push(Object.values(object));
 ;
@@ -642,7 +654,7 @@ CODE: !
   let object = system.data.pop();
   let key = system.data.pop();
   let value = system.data.pop();
-  object[key] = value; 
+  object[key] = value;
 ;
 
 : +! { addend key object -- }
@@ -690,7 +702,7 @@ CODE: CONCAT
   system.data.push(x.concat(y));
 ;
 
-CODE: COUNT 
+CODE: COUNT
   let array = system.data.pop();
   system.data.push(array.length);
 ;
@@ -707,8 +719,9 @@ CODE: POP
 ;
 
 CODE: TIME
+  let input = system.input.top();
   let start = performance.now();
-  system.evaluate(system.input.next());
+  system.evaluate(input.next());
   let end = performance.now();
   system.console.write(\`\${end - start}ms\`);
 ;
@@ -717,7 +730,8 @@ CODE: TIME
 \\ Memory
 
 CODE: VARIABLE
-  system.book.add(new Word(Direct, system.input.next()));
+  let input = system.input.top();
+  system.book.add(new Word(Direct, input.next()));
   system.book.word.boundary = 1;
   system.book.word.execute = new Function(\`
     let frame = system.frames.top();
@@ -727,7 +741,8 @@ CODE: VARIABLE
 ;
 
 CODE: VALUE
-  system.book.add(new Word(Direct, system.input.next()));
+  let input = system.input.top();
+  system.book.add(new Word(Direct, input.next()));
   system.book.word.boundary = 1;
   system.book.word.append(system.data.pop());
   system.book.word.execute = new Function(\`
@@ -737,7 +752,8 @@ CODE: VALUE
 ;
 
 CODE: TO
-  let token = system.input.next();
+  let input = system.input.top();
+  let token = input.next();
   let word = system.pile.search(token);
   word.definition[0] = system.data.pop();
 ;
@@ -773,17 +789,19 @@ CODE: BOOKS?
   system.console.write(titles.join(' '));
 ;
 
-CODE: PUBLISH 
-  system.book = new Book(system.input.next());
+CODE: PUBLISH
+  let input = system.input.top();
+  system.book = new Book(input.next());
   system.pile.push(system.book);
 ;
 
-CODE: BURN 
+CODE: BURN
   system.pile.pop();
 ;
 
-CODE: USE 
-  system.book = system.pile.find(system.input.next());
+CODE: USE
+  let input = system.input.top();
+  system.book = system.pile.find(input.next());
 ;
 
 
@@ -809,19 +827,20 @@ CODE: ,
 ;
 
 CODE: '
-  system.data.push(system.pile.search(system.input.next()));
+  let input = system.input.top();
+  system.data.push(system.pile.search(input.next()));
 ;
 
-: DEFINITION ( word -- definition )
+: DEFINITION? ( word -- definition )
   "definition" SWAP ? ;
 
 : FUNCTION? ( word -- function )
   "execute" SWAP ? ;
 
 : SEE ( token -- )
-  " " 1 "join" POSTPONE ' DEFINITION METHOD . ;
+  " " 1 "join" POSTPONE ' DEFINITION? METHOD . ;
 
-: INSPECT ( item -- ) 
+: INSPECT ( item -- )
   DUP . ;
 
 
@@ -865,16 +884,16 @@ CODE: JUMP?
 ;
 
 MACRO: IF
-  JUMP? [ LATEST? DEFINITION COUNT ] 0 ;
+  JUMP? [ LATEST? DEFINITION? COUNT ] 0 ;
 
 MACRO: THEN
-  [ LATEST? DEFINITION COUNT SWAP LATEST? DEFINITION ! ] ;
+  [ LATEST? DEFINITION? COUNT SWAP LATEST? DEFINITION? ! ] ;
 
 MACRO: ELSE
-  JUMP [ LATEST? DEFINITION COUNT SWAP ] 0 THEN ;
+  JUMP [ LATEST? DEFINITION? COUNT SWAP ] 0 THEN ;
 
 MACRO: BEGIN
-  [ LATEST? DEFINITION COUNT ] ;
+  [ LATEST? DEFINITION? COUNT ] ;
 
 MACRO: UNTIL
   JUMP? [ , ] ;
@@ -891,8 +910,9 @@ MACRO: REPEAT
 
 \\ Input
 
-CODE: WORD 
-  system.data.push(system.input.next());
+CODE: WORD
+  let input = system.input.top();
+  system.data.push(input.next());
 ;
 
 
@@ -922,7 +942,7 @@ CODE: OVER
   system.data.over();
 ;
 
-CODE: NIP 
+CODE: NIP
   system.data.nip();
 ;
 
@@ -930,7 +950,7 @@ CODE: TUCK
   system.data.tuck();
 ;
 
-CODE: ROLL 
+CODE: ROLL
   system.data.roll(system.data.pop());
 ;
 
@@ -979,7 +999,7 @@ CODE: ADROP
 ;
 
 
-\\ Arithmetic 
+\\ Arithmetic
 
 CODE: +
   let y = system.data.pop();
@@ -1005,7 +1025,7 @@ CODE: /
   system.data.push(x / y);
 ;
 
-CODE: MOD 
+CODE: MOD
   let y = system.data.pop();
   let x = system.data.pop();
   system.data.push(x % y);
@@ -1023,25 +1043,25 @@ CODE: >>
   system.data.push(x >> y);
 ;
 
-CODE: AND 
+CODE: AND
   let y = system.data.pop();
   let x = system.data.pop();
   system.data.push(x & y);
 ;
 
-CODE: OR 
+CODE: OR
   let y = system.data.pop();
   let x = system.data.pop();
   system.data.push(x | y);
 ;
 
-CODE: XOR 
+CODE: XOR
   let y = system.data.pop();
   let x = system.data.pop();
   system.data.push(x ^ y);
 ;
 
-CODE: INVERT 
+CODE: INVERT
   system.data.push(~system.data.pop());
 ;
 
@@ -1099,6 +1119,21 @@ CODE: >=
   let x = system.data.pop();
   system.data.push(x >= y);
 ;
+
+`);
+system.parse(`
+
+PUBLISH WINDOW
+
+CODE: WINDOW
+  system.data.push(window);
+;
+
+: SET-INTERVAL { function interval -- id }
+  function interval 2 "setInterval" WINDOW METHOD ;
+
+: CLEAR-INTERVAL { id -- }
+  id 1 "clearInterval" WINDOW METHOD ;
 
 `);
 system.parse(`
@@ -1251,7 +1286,7 @@ VARIABLE LineIndex
 : READ { text -- }
   BREAK TIMESTAMP
   text INPUT
-  text PARSE ;
+  text EVALUATE ;
 
 
 \\ Control 
