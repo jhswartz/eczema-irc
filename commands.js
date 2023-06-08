@@ -21,6 +21,9 @@ system.parse(`
 : /whois { nick -- }
   <[ "WHOIS" nick nick ]> " " JOIN SEND ;
 
+: /whowas { nick -- }
+  <[ "WHOWAS" nick ]> " " JOIN SEND ;
+
 : /who { channel -- }
   <[ "WHO" channel ]> " " JOIN SEND ;
 
