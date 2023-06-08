@@ -36,4 +36,12 @@ VARIABLE Socket
 
   web-socket ;
 
+: KEEP-ALIVE { string interval -- }
+  <[ "system.data.push('PING " string "');"
+     "system.interpret('SEND');" ]> { code }
+  0 code "" JOIN FUNCTION           { function }
+  interval 1000 *                   { interval }
+  "window" :CODE                    { window }
+  function interval 2 "setInterval" window METHOD ;
+
 `);

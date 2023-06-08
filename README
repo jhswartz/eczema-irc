@@ -21,6 +21,7 @@ INTERACTION
 
     "PRIVMSG UptightUser :unsolicited message!" SEND
 
+
   + Dedicated Command Words 
 
     "#channel" /join
@@ -31,9 +32,19 @@ INTERACTION
     See "commands.es" for more information.
 
 
+  + No PING?
+
+    Use KEEP-ALIVE if the server does not generate PING requests.
+
+
 HIGHLIGHTING
 
-  "#ec2" "##forth"        TargetColour !
+  <{ "##re"        "#5cd"
+     "##asm"       "#c5a"
+     "##forth"     "#5c2"
+     "#postscript" "#888"
+     "#ed"         "#444" }> TO TargetColour
+
   "#ce2" "GeckoExcrement" TargetColour !
 
 
