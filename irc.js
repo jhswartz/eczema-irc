@@ -6,6 +6,7 @@ VARIABLE YourNick
 VARIABLE YourUser
 VARIABLE YourName
 VARIABLE Socket
+VARIABLE KeepAlive
 
 : WEB-SOCKET { uri -- websocket }
   uri 1 "WebSocket" NEW ;
@@ -21,27 +22,22 @@ VARIABLE Socket
   <[ "NICK" YourNick ? ]> " " JOIN SEND
   <[ "USER " YourUser ? " 0 0 :" YourName ? ]> "" JOIN SEND ;
 
-: WHEN-CLOSED { event -- }
+: DISCONNECT { event -- }
+  KeepAlive ? IF
+    KeepAlive ? CLEAR-INTERVAL
+    UNDEFINED KeepAlive !
+  THEN
   "Disconnected!" AlertColour #view TEXT ;
 
 : CONNECT { uri -- web-socket }
-  uri WEB-SOCKET         { web-socket }
-  "IDENTIFY"    ON-EVENT { on-open }
-  "WHEN-CLOSED" ON-EVENT { on-close }
-  "PARSE-LINE"  ON-EVENT { on-line }
-
-  on-open  "open"    web-socket ADD-EVENT-LISTENER
-  on-close "close"   web-socket ADD-EVENT-LISTENER
-  on-line  "message" web-socket ADD-EVENT-LISTENER 
-
+  uri WEB-SOCKET { web-socket }
+  "IDENTIFY"   ON-EVENT "open"    web-socket ADD-EVENT-LISTENER
+  "DISCONNECT" ON-EVENT "close"   web-socket ADD-EVENT-LISTENER
+  "PARSE-LINE" ON-EVENT "message" web-socket ADD-EVENT-LISTENER
   web-socket ;
 
-: KEEP-ALIVE { string interval -- }
-  <[ "system.data.push('PING " string "');"
-     "system.interpret('SEND');" ]> { code }
-  0 code "" JOIN FUNCTION           { function }
-  interval 1000 *                   { interval }
-  "window" :CODE                    { window }
-  function interval 2 "setInterval" window METHOD ;
+: KEEP-ALIVE { action interval -- id }
+  0 action ENCODE FUNCTION { function }
+  function interval SET-INTERVAL KeepAlive ! ;
 
 `);
