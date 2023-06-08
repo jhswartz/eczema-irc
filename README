@@ -6,13 +6,13 @@ SET YOUR NICK, USERNAME AND "REAL NAME"
   "GeckoExcrement" "geckoffee" "100% Certified Organic" IDENTITY!
 
 
-CONNECT TO AN IRC SERVER EXPOSED VIA WEB SOCKET
-
-  "ws://127.0.0.1:9000" CONNECT Socket !
+CONNECT TO AN IRC SERVER VIA WEB SOCKET
 
   Take the websocket URI from your favourite IRC network's webchat,
-  or spawn a websocket server (eg: websocketd + socat) that will
-  forward a connection to your prefered IRC server instead.
+  or spawn a websocket server that will forward a connection to your
+  preferred IRC server instead.
+
+  "wss://web.libera.chat/webirc/websocketd/" CONNECT Socket !
 
 
 INTERACTION
@@ -29,12 +29,15 @@ INTERACTION
     "nick" /whois
     "artisanally handcrafted spam!" "HipsterInASafariSuit" /msg
 
-    See "commands.es" for more information.
+    See "commands.es" for more.
 
 
-  + No PING?
+  + No PING before disconnection?
 
-    Use KEEP-ALIVE if the server does not generate PING requests.
+    Send an empty message every 45 seconds.
+
+      : NUDGE ( -- ) "" 1 "send" Socket ? METHOD ;
+      "NUDGE" 45000 KEEP-ALIVE
 
 
 HIGHLIGHTING
