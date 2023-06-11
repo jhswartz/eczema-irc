@@ -1,7 +1,36 @@
 system.parse(`
 
+86400 VALUE SECONDS/DAY
+3600  VALUE SECONDS/HOUR
+60    VALUE SECONDS/MINUTE
+
 OBJECT VALUE Names
 OBJECT VALUE Users
+
+: DECOLONISE { tokens -- tokens }
+  0 tokens ? { first }
+  0 first ? ":" = IF
+    1 first SLICE { first }
+    first 0 tokens !
+  THEN
+  tokens ;
+
+: DAYS? { seconds -- days }
+  seconds SECONDS/DAY / FLOOR ;
+
+: HOURS? { seconds -- hours }
+  seconds SECONDS/DAY  MOD
+          SECONDS/HOUR / FLOOR ;
+
+: MINUTES? { seconds -- hours }
+  seconds SECONDS/DAY    MOD
+          SECONDS/HOUR   MOD
+          SECONDS/MINUTE / FLOOR ;
+
+: SECONDS? { seconds -- hours }
+  seconds SECONDS/DAY    MOD
+          SECONDS/HOUR   MOD
+          SECONDS/MINUTE MOD ;
 
 : PONG { type -- }
   <[ "PONG" type ]> " " JOIN { message }
@@ -44,11 +73,9 @@ OBJECT VALUE Users
   message target #view MESSAGE ;
 
 : PARSE-NAMES { source type target remaining -- }
-  1 remaining ?     { channel }
-  channel Names ?   { existing }
-  2 remaining SLICE { names }
-  1 0 names ? SLICE { first }
-  first 0 names !
+  1 remaining ?                { channel }
+  channel Names ?              { existing }
+  2 remaining SLICE DECOLONISE { names }
 
   existing IF
     existing names CONCAT { names }
@@ -88,6 +115,66 @@ OBJECT VALUE Users
     nick Users DELETE
   REPEAT ;
 
+: PARSE-WHOIS-USER { source type target remaining -- }
+  0 remaining ?                               { nick }
+  1 remaining ?                               { user }
+  2 remaining ?                               { address }
+  4 remaining SLICE " " JOIN                  { info }
+  <[ "IDENTITY" user address info ]> " " JOIN { message }
+  message nick #view MESSAGE ;
+
+: PARSE-WHOIS-CHANNELS { source type target remaining -- }
+  0 remaining ?                         { nick }
+  1 remaining SLICE DECOLONISE " " JOIN { channels }
+  <[ "CHANNELS" channels ]> " " JOIN    { message }
+  message nick #view MESSAGE ;
+
+: PARSE-WHOIS-SERVER { source type target remaining -- }
+  0 remaining ?                       { nick }
+  1 remaining ?                       { server }
+  2 remaining SLICE " " JOIN          { info }
+  <[ "SERVER" server info ]> " " JOIN { message }
+  message nick #view MESSAGE ;
+
+: PARSE-WHOIS-CONNECTION { source type target remaining -- }
+  0 remaining ?                         { nick }
+  1 remaining SLICE DECOLONISE " " JOIN { message }
+  message nick #view MESSAGE ;
+
+: PARSE-WHOIS-HOST { source type target remaining -- }
+  0 remaining ?                         { nick }
+  1 remaining SLICE DECOLONISE " " JOIN { message }
+  message nick #view MESSAGE ;
+
+: PARSE-WHOIS-ACTUALLY { source type target remaining -- }
+  0 remaining ?              { nick }
+  1 remaining ?              { host }
+  <[ "HOST" host ]> " " JOIN { message }
+  message nick #view MESSAGE ;
+
+: PARSE-WHOIS-IDLE { source type target remaining -- }
+  0 remaining ? { nick }
+  1 remaining ? { idle }
+  <[ "IDLE"
+     <[ idle DAYS?    "d" ]> "" JOIN
+     <[ idle HOURS?   "h" ]> "" JOIN
+     <[ idle MINUTES? "m" ]> "" JOIN
+     <[ idle SECONDS? "s" ]> "" JOIN
+  ]> " " JOIN { message }
+  message nick #view MESSAGE ;
+
+: PARSE-AWAY { source type target remaining -- }
+  0 remaining ?                         { nick }
+  1 remaining SLICE DECOLONISE " " JOIN { reason }
+  <[ "AWAY" reason ]> " " JOIN          { message }
+  message nick #view MESSAGE ;
+
+: PARSE-WHOIS-ACCOUNT { source type target remaining -- }
+  0 remaining ?                    { nick }
+  1 remaining ?                    { account }
+  <[ "ACCOUNT" account ]> " " JOIN { message }
+  message nick #view MESSAGE ;
+
 : IGNORE-LINE { source type target remaining -- } ;
 
 <{
@@ -101,6 +188,15 @@ OBJECT VALUE Users
    "366"     "PARSE-END-NAMES"
    "352"     "PARSE-WHO"
    "315"     "PARSE-END-WHO"
+   "311"     "PARSE-WHOIS-USER"
+   "319"     "PARSE-WHOIS-CHANNELS"
+   "312"     "PARSE-WHOIS-SERVER"
+   "671"     "PARSE-WHOIS-CONNECTION"
+   "378"     "PARSE-WHOIS-HOST"
+   "338"     "PARSE-WHOIS-ACTUALLY"
+   "317"     "PARSE-WHOIS-IDLE"
+   "330"     "PARSE-WHOIS-ACCOUNT"
+   "301"     "PARSE-AWAY"
    "318"     "IGNORE-LINE"
    "333"     "IGNORE-LINE"
 }>
