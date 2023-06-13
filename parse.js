@@ -178,27 +178,27 @@ OBJECT VALUE Users
 : IGNORE-LINE { source type target remaining -- } ;
 
 <{
-   "JOIN"    "PARSE-MOVEMENT"
-   "PART"    "PARSE-MOVEMENT"
-   "MODE"    "PARSE-MODE"
-   "PRIVMSG" "PARSE-MESSAGE"
-   "NOTICE"  "PARSE-MESSAGE"
-   "332"     "PARSE-TOPIC"
-   "353"     "PARSE-NAMES"
-   "366"     "PARSE-END-NAMES"
-   "352"     "PARSE-WHO"
-   "315"     "PARSE-END-WHO"
-   "311"     "PARSE-WHOIS-USER"
-   "319"     "PARSE-WHOIS-CHANNELS"
-   "312"     "PARSE-WHOIS-SERVER"
-   "671"     "PARSE-WHOIS-CONNECTION"
-   "378"     "PARSE-WHOIS-HOST"
-   "338"     "PARSE-WHOIS-ACTUALLY"
-   "317"     "PARSE-WHOIS-IDLE"
-   "330"     "PARSE-WHOIS-ACCOUNT"
-   "301"     "PARSE-AWAY"
-   "318"     "IGNORE-LINE"
-   "333"     "IGNORE-LINE"
+   "JOIN"    ' PARSE-MOVEMENT
+   "PART"    ' PARSE-MOVEMENT
+   "MODE"    ' PARSE-MODE
+   "PRIVMSG" ' PARSE-MESSAGE
+   "NOTICE"  ' PARSE-MESSAGE
+   "332"     ' PARSE-TOPIC
+   "353"     ' PARSE-NAMES
+   "366"     ' PARSE-END-NAMES
+   "352"     ' PARSE-WHO
+   "315"     ' PARSE-END-WHO
+   "311"     ' PARSE-WHOIS-USER
+   "319"     ' PARSE-WHOIS-CHANNELS
+   "312"     ' PARSE-WHOIS-SERVER
+   "671"     ' PARSE-WHOIS-CONNECTION
+   "378"     ' PARSE-WHOIS-HOST
+   "338"     ' PARSE-WHOIS-ACTUALLY
+   "317"     ' PARSE-WHOIS-IDLE
+   "330"     ' PARSE-WHOIS-ACCOUNT
+   "301"     ' PARSE-AWAY
+   "318"     ' IGNORE-LINE
+   "333"     ' IGNORE-LINE
 }>
 VALUE LineTypes
 
@@ -217,7 +217,7 @@ VALUE LineTypes
 
   type LineTypes KEYS CONTAINS IF
     type LineTypes ? { parser }
-    source type target remaining parser EVALUATE
+    source type target remaining parser EXECUTE
     EXIT
   THEN
 
