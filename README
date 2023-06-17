@@ -1,4 +1,4 @@
-eczema/irc 0.6
+eczema/irc 0.7
 
 
 SET YOUR NICK, USERNAME AND "REAL NAME" 
@@ -17,38 +17,53 @@ CONNECT TO AN IRC SERVER VIA WEB SOCKET
 
 INTERACTION
 
-  + Raw Commands via SEND
+  Raw Commands via SEND
 
     "PRIVMSG UptightUser :unsolicited message!" SEND
 
 
-  + Dedicated Command Words 
+  Dedicated Command Words
 
     "#channel" /join
     "#channel" /who
     "nick" /whois
     "artisanally handcrafted spam!" "HipsterInASafariSuit" /msg
 
-    See "commands.es" for more.
+    See "commands.js" for the rest, and/or implement your own.
 
 
-  + No PING before disconnection?
+  No PING before disconnection?
 
-    Send an empty message every 45 seconds.
+    Send an empty message every 60 seconds.
 
       : NUDGE ( -- ) "" 1 "send" Socket ? METHOD ;
-      "NUDGE" 45000 KEEP-ALIVE
+      "NUDGE" 60000 KEEP-ALIVE
 
 
 HIGHLIGHTING
 
-  <{ "##re"        "#5cd"
-     "##asm"       "#c5a"
-     "##forth"     "#5c2"
-     "#postscript" "#888"
-     "#ed"         "#444" }> TO TargetColour
+  Set multiple target colours and refresh previously received lines:
 
-  "#ce2" "GeckoExcrement" TargetColour !
+    <{ "##re"        "#5cd"
+       "##asm"       "#c5a"
+       "##forth"     "#5c2"
+       "#postscript" "#888"
+       "#ed"         "#444" }> TargetColour ! REFRESH
+
+
+  Set a target colour for just a single user:
+
+    "#ce2" "GeckoExcrement" /colour
+
+
+  Drown out the noise of uninteresting text.
+
+    "#geckoffee" /focus
+
+
+  Restore default opacity.
+
+    /defocus
 
 
 TRY IT OUT
