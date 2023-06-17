@@ -34,12 +34,11 @@ system.parse(`
   <[ "NICK" nick ]> " " JOIN SEND ;
 
 : /colour { colour target -- }
-  colour target TargetColour ? ! ;
+  colour target TargetColour ? !
+  REFRESH ;
 
 : /opacity { opacity target -- }
-  opacity target TargetOpacity ? ! ;
-
-: /refresh ( -- )
+  opacity target TargetOpacity ? !
   REFRESH ;
 
 : /focus { target -- }
