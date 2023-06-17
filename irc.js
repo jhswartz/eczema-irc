@@ -13,7 +13,7 @@ VARIABLE KeepAlive
 
 : SEND { message -- }
   message 1 "send" Socket ? METHOD
-  message OutboundColour #view TEXT ;
+  message OutboundColour DefaultOpacity ? #view "sent" TEXT ;
 
 : IDENTITY! { nick user name -- }
   nick YourNick ! user YourUser ! name YourName ! ;
@@ -27,7 +27,7 @@ VARIABLE KeepAlive
     KeepAlive ? CLEAR-INTERVAL
     UNDEFINED KeepAlive !
   THEN
-  "Disconnected!" AlertColour #view TEXT ;
+  "Disconnected!" AlertColour DefaultOpacity ? #view "alert" TEXT ;
 
 : CONNECT { uri -- web-socket }
   uri WEB-SOCKET { web-socket }

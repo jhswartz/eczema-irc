@@ -7,13 +7,13 @@ system.parse(`
 OBJECT VALUE Names
 OBJECT VALUE Users
 
-: DECOLONISE { tokens -- tokens }
-  0 tokens ? { first }
-  0 first ? ":" = IF
-    1 first SLICE { first }
-    first 0 tokens !
+: DROP-COLON { token -- token }
+  token IF
+    0 token ? ":" = IF
+      1 token SLICE { token }
+    THEN
   THEN
-  tokens ;
+  token ;
 
 : DAYS? { seconds -- days }
   seconds SECONDS/DAY / FLOOR ;
@@ -36,24 +36,33 @@ OBJECT VALUE Users
   <[ "PONG" type ]> " " JOIN { message }
   message 1 "send" Socket ? METHOD ;
 
-: PARSE-MOVEMENT { source type target remaining -- }
+: PARSE-MOVEMENT { source type remaining -- }
+  0 remaining ? DROP-COLON   { target }
   <[ type source ]> " " JOIN { message }
   message target #view MESSAGE ;
 
-: PARSE-TOPIC { source type target remaining -- }
-  0 remaining ?                { channel }
-  1 remaining SLICE " " JOIN   { topic }
+: PARSE-INFO { source type remaining -- }
+  1 remaining ?               { channel }
+  2 remaining SLICE " " JOIN  { info }
+  <[ "INFO" topic ]> " " JOIN { message }
+  message channel #view MESSAGE ;
+
+: PARSE-TOPIC { source type remaining -- }
+  1 remaining ?                { channel }
+  2 remaining SLICE " " JOIN   { topic }
   <[ "TOPIC" topic ]> " " JOIN { message }
   message channel #view MESSAGE ;
 
-: PARSE-MODE { source type target remaining -- }
-  <[ "MODE" remaining ]> " " JOIN { message }
+: PARSE-MODE { source type remaining -- }
+  0 remaining ? DROP-COLON              { target }
+  1 remaining ?                         { flags }
+  2 remaining SLICE " " JOIN DROP-COLON { subject }
+  <[ "MODE" flags subject ]> " " JOIN   { message }
   message target #view MESSAGE ;
 
 : PARSE-NICK { source -- }
   source "!" SPLIT { tokens }
-  0 tokens ?       { nick }
-  1 nick SLICE ;
+  0 tokens ? ;
 
 : ADORN-NICK { type nick -- }
   type "NOTICE" = IF
@@ -65,17 +74,20 @@ OBJECT VALUE Users
   THEN
   <[ introducer nick terminator ]> "" JOIN ;
 
-: PARSE-MESSAGE { source type target remaining -- }
-  1 remaining " " JOIN SLICE { text }
-  source PARSE-NICK          { nick }
-  type nick ADORN-NICK       { from }
-  <[ from text ]> " " JOIN   { message }
+: PARSE-MESSAGE { source type remaining -- }
+  0 remaining ? DROP-COLON              { target }
+  1 remaining SLICE " " JOIN DROP-COLON { text }
+  source PARSE-NICK                     { nick }
+  type nick ADORN-NICK                  { from }
+  <[ from text ]> " " JOIN              { message }
   message target #view MESSAGE ;
 
-: PARSE-NAMES { source type target remaining -- }
-  1 remaining ?                { channel }
-  channel Names ?              { existing }
-  2 remaining SLICE DECOLONISE { names }
+: PARSE-NAMES { source type remaining -- }
+  2 remaining ?        { channel }
+  channel Names ?      { existing }
+  3 remaining SLICE    { names }
+  0 names ? DROP-COLON { first }
+  first 0 names !
 
   existing IF
     existing names CONCAT { names }
@@ -83,24 +95,24 @@ OBJECT VALUE Users
 
   names channel Names ! ;
 
-: PARSE-END-NAMES { source type target remaining -- }
-  0 remaining ?                 { channel }
+: PARSE-END-NAMES { source type remaining -- }
+  1 remaining ?                 { channel }
   channel Names ? SORT " " JOIN { names }
   <[ "NAMES" names ]> " " JOIN  { message }
   message channel #view MESSAGE
   ARRAY channel Names ! ;
 
-: PARSE-WHO { source type target remaining -- }
-  0 remaining ? { channel }
-  4 remaining ? { nick }
+: PARSE-WHO { source type remaining -- }
+  1 remaining ? { channel }
+  5 remaining ? { nick }
   <{
-    "username" 1 remaining ?
-    "address"  2 remaining ?
-    "info"     7 remaining SLICE " " JOIN
+    "username" 2 remaining ?
+    "address"  3 remaining ?
+    "info"     8 remaining SLICE " " JOIN
   }> nick Users ! ;
 
-: PARSE-END-WHO { source type target remaining -- }
-  0 remaining ?   { channel }
+: PARSE-END-WHO { source type remaining -- }
+  1 remaining ?   { channel }
   Users KEYS SORT { nicks }
 
   BEGIN nicks COUNT WHILE
@@ -115,46 +127,46 @@ OBJECT VALUE Users
     nick Users DELETE
   REPEAT ;
 
-: PARSE-WHOIS-USER { source type target remaining -- }
-  0 remaining ?                               { nick }
-  1 remaining ?                               { user }
-  2 remaining ?                               { address }
-  4 remaining SLICE " " JOIN                  { info }
+: PARSE-WHOIS-USER { source type remaining -- }
+  1 remaining ?                               { nick }
+  2 remaining ?                               { user }
+  3 remaining ?                               { address }
+  5 remaining SLICE " " JOIN                  { info }
   <[ "IDENTITY" user address info ]> " " JOIN { message }
   message nick #view MESSAGE ;
 
-: PARSE-WHOIS-CHANNELS { source type target remaining -- }
-  0 remaining ?                         { nick }
-  1 remaining SLICE DECOLONISE " " JOIN { channels }
+: PARSE-WHOIS-CHANNELS { source type remaining -- }
+  1 remaining ?                         { nick }
+  2 remaining SLICE " " JOIN DROP-COLON { channels }
   <[ "CHANNELS" channels ]> " " JOIN    { message }
   message nick #view MESSAGE ;
 
-: PARSE-WHOIS-SERVER { source type target remaining -- }
-  0 remaining ?                       { nick }
-  1 remaining ?                       { server }
-  2 remaining SLICE " " JOIN          { info }
+: PARSE-WHOIS-SERVER { source type remaining -- }
+  1 remaining ?                       { nick }
+  2 remaining ?                       { server }
+  3 remaining SLICE " " JOIN          { info }
   <[ "SERVER" server info ]> " " JOIN { message }
   message nick #view MESSAGE ;
 
-: PARSE-WHOIS-CONNECTION { source type target remaining -- }
-  0 remaining ?                         { nick }
-  1 remaining SLICE DECOLONISE " " JOIN { message }
+: PARSE-WHOIS-CONNECTION { source type remaining -- }
+  1 remaining ?                         { nick }
+  2 remaining SLICE " " JOIN DROP-COLON { message }
   message nick #view MESSAGE ;
 
-: PARSE-WHOIS-HOST { source type target remaining -- }
-  0 remaining ?                         { nick }
-  1 remaining SLICE DECOLONISE " " JOIN { message }
+: PARSE-WHOIS-HOST { source type remaining -- }
+  1 remaining ?                         { nick }
+  2 remaining SLICE " " JOIN DROP-COLON { message }
   message nick #view MESSAGE ;
 
-: PARSE-WHOIS-ACTUALLY { source type target remaining -- }
-  0 remaining ?              { nick }
-  1 remaining ?              { host }
+: PARSE-WHOIS-ACTUALLY { source type remaining -- }
+  1 remaining ?              { nick }
+  2 remaining ?              { host }
   <[ "HOST" host ]> " " JOIN { message }
   message nick #view MESSAGE ;
 
-: PARSE-WHOIS-IDLE { source type target remaining -- }
-  0 remaining ? { nick }
-  1 remaining ? { idle }
+: PARSE-WHOIS-IDLE { source type remaining -- }
+  1 remaining ? { nick }
+  2 remaining ? { idle }
   <[ "IDLE"
      <[ idle DAYS?    "d" ]> "" JOIN
      <[ idle HOURS?   "h" ]> "" JOIN
@@ -163,19 +175,24 @@ OBJECT VALUE Users
   ]> " " JOIN { message }
   message nick #view MESSAGE ;
 
-: PARSE-AWAY { source type target remaining -- }
-  0 remaining ?                         { nick }
-  1 remaining SLICE DECOLONISE " " JOIN { reason }
+: PARSE-AWAY { source type remaining -- }
+  1 remaining ?                         { nick }
+  2 remaining SLICE " " JOIN DROP-COLON { reason }
   <[ "AWAY" reason ]> " " JOIN          { message }
   message nick #view MESSAGE ;
 
-: PARSE-WHOIS-ACCOUNT { source type target remaining -- }
-  0 remaining ?                    { nick }
-  1 remaining ?                    { account }
+: PARSE-WHOIS-ACCOUNT { source type remaining -- }
+  1 remaining ?                    { nick }
+  2 remaining ?                    { account }
   <[ "ACCOUNT" account ]> " " JOIN { message }
   message nick #view MESSAGE ;
 
-: IGNORE-LINE { source type target remaining -- } ;
+: PARSE-WHOIS-REGISTERED { source type remaining -- }
+  1 remaining ?                    { nick }
+  <[ "REGISTERED" nick ]> " " JOIN { message }
+  message nick #view MESSAGE ;
+
+: IGNORE-LINE { source type remaining -- } ;
 
 <{
    "JOIN"    ' PARSE-MOVEMENT
@@ -183,12 +200,14 @@ OBJECT VALUE Users
    "MODE"    ' PARSE-MODE
    "PRIVMSG" ' PARSE-MESSAGE
    "NOTICE"  ' PARSE-MESSAGE
+   "331"     ' PARSE-INFO
    "332"     ' PARSE-TOPIC
    "353"     ' PARSE-NAMES
    "366"     ' PARSE-END-NAMES
    "352"     ' PARSE-WHO
    "315"     ' PARSE-END-WHO
    "311"     ' PARSE-WHOIS-USER
+   "314"     ' PARSE-WHOIS-USER
    "319"     ' PARSE-WHOIS-CHANNELS
    "312"     ' PARSE-WHOIS-SERVER
    "671"     ' PARSE-WHOIS-CONNECTION
@@ -196,19 +215,22 @@ OBJECT VALUE Users
    "338"     ' PARSE-WHOIS-ACTUALLY
    "317"     ' PARSE-WHOIS-IDLE
    "330"     ' PARSE-WHOIS-ACCOUNT
+   "307"     ' PARSE-WHOIS-REGISTERED
    "301"     ' PARSE-AWAY
    "318"     ' IGNORE-LINE
    "333"     ' IGNORE-LINE
+   "369"     ' IGNORE-LINE
 }>
 VALUE LineTypes
 
 : PARSE-LINE { event -- }
-  "data" event ? { data }
-  data " " SPLIT { tokens }
-  0 tokens ?     { source }
-  1 tokens ?     { type }
-  2 tokens ?     { target }
-  3 tokens SLICE { remaining }
+  "data" event ?        { data }
+  data " " SPLIT        { tokens }
+  0 tokens ? DROP-COLON { source }
+  1 tokens ?            { type }
+  2 tokens SLICE        { remaining }
+
+  \\ tokens .
 
   source "PING" = IF
     type PONG
@@ -217,10 +239,10 @@ VALUE LineTypes
 
   type LineTypes KEYS CONTAINS IF
     type LineTypes ? { parser }
-    source type target remaining parser EXECUTE
+    source type remaining parser EXECUTE
     EXIT
   THEN
 
-  data InboundColour #view TEXT ;
+  data InboundColour DefaultOpacity ? #view "unparsed" TEXT ;
 
 `);

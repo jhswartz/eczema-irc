@@ -33,4 +33,32 @@ system.parse(`
 : /nick { nick -- }
   <[ "NICK" nick ]> " " JOIN SEND ;
 
+: /colour { colour target -- }
+  colour target TargetColour ? ! ;
+
+: /opacity { opacity target -- }
+  opacity target TargetOpacity ? ! ;
+
+: /refresh ( -- )
+  REFRESH ;
+
+: /focus { target -- }
+  <{ target 1.000 }> TargetOpacity !
+  0.250 DefaultOpacity !
+  REFRESH ;
+
+: /defocus ( -- )
+  OBJECT TargetOpacity !
+  1.000 DefaultOpacity !
+  REFRESH ;
+
+: /identify { account password -- }
+  <[ "IDENTIFY" account password ]> " " JOIN "NickServ" /msg ;
+
+: /release { account password -- }
+  <[ "RELEASE" account password ]> " " JOIN "NickServ" /msg ;
+
+: /ghost { account password -- }
+  <[ "GHOST" account password ]> " " JOIN "NickServ" /msg ;
+
 `);
