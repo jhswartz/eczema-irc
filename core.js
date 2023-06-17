@@ -612,6 +612,10 @@ CODE: ARRAY
   system.data.push([]);
 ;
 
+CODE: TO-ARRAY
+  system.data.push(Array.from(system.data.pop()));
+;
+
 CODE: :ARRAY
   let count = system.data.pop();
   let array = [];
@@ -689,6 +693,9 @@ CODE: !
 : MERGE { count glue -- string }
   count :ARRAY glue JOIN ;
 
+: TRIM { string -- trimmed }
+  0 "trim" string METHOD ;
+
 : FIT { string form -- fitted }
   form string +   { composite }
   form COUNT -1 * { index }
@@ -737,6 +744,19 @@ CODE: VARIABLE
   let input = system.input.top();
   system.book.add(new Word(Direct, input.next()));
   system.book.word.boundary = 1;
+  system.book.word.execute = new Function(\`
+    let frame = system.frames.top();
+    system.data.push(0);
+    system.data.push(frame.word.definition);
+  \`);
+;
+
+CODE: :VARIABLE
+  let value = system.data.pop();
+  let input = system.input.top();
+  system.book.add(new Word(Direct, input.next()));
+  system.book.word.boundary = 1;
+  system.book.word.definition = [value];
   system.book.word.execute = new Function(\`
     let frame = system.frames.top();
     system.data.push(0);
@@ -1151,14 +1171,17 @@ CODE: DOCUMENT
 : SELECT-CLASS { name -- selector }
   <[ "." name ]> "" JOIN ;
 
-: QUERY-SELECTOR ( selector -- element )
-  1 "querySelector" DOCUMENT METHOD ;
+: QUERY-SELECTOR { selector element -- nested-element }
+  selector 1 "querySelector" element METHOD ;
 
-: QUERY-ALL ( selector -- element )
-  1 "querySelectorAll" DOCUMENT METHOD ;
+: QUERY-ALL { selector element -- nested-elements }
+  selector 1 "querySelectorAll" element METHOD ;
 
 : CREATE-ELEMENT ( name -- element )
   1 "createElement" DOCUMENT METHOD ;
+
+: CLASS? { element -- name }
+  "className" element ? ;
 
 : CLASS! { name element -- }
   name "className" element ! ;
@@ -1168,6 +1191,9 @@ CODE: DOCUMENT
 
 : PREPEND { child parent -- }
   child 1 "prepend" parent METHOD ;
+
+: TEXT? { element -- text }
+  "textContent" element ? ;
 
 : ADD-EVENT-LISTENER { function event element -- }
   event function 2 "addEventListener" element METHOD ;
@@ -1196,6 +1222,15 @@ CODE: DOCUMENT
 
 : COLOUR? { element -- colour }
   "color" element STYLE? ;
+
+: COLOUR! { colour element -- }
+  colour element COLOUR? ! ;
+
+: OPACITY? { element -- opacity }
+  "opacity" element STYLE? ;
+
+: OPACITY! { opacity element -- }
+  opacity element OPACITY? ! ;
 
 : HIDE { element -- }
   "none" "display" element STYLE? ! ;
@@ -1252,12 +1287,12 @@ VARIABLE LineIndex
 "#6ec" VALUE InputOutput
 "#ec2" VALUE ErrorOutput
 
-"#view"    QUERY-SELECTOR VALUE #view
-"#output"  QUERY-SELECTOR VALUE #output
-"#control" QUERY-SELECTOR VALUE #control
-"#input"   QUERY-SELECTOR VALUE #input
-"#enter"   QUERY-SELECTOR VALUE #enter
-"#mode"    QUERY-SELECTOR VALUE #mode
+"#view"    DOCUMENT QUERY-SELECTOR VALUE #view
+"#output"  DOCUMENT QUERY-SELECTOR VALUE #output
+"#control" DOCUMENT QUERY-SELECTOR VALUE #control
+"#input"   DOCUMENT QUERY-SELECTOR VALUE #input
+"#enter"   DOCUMENT QUERY-SELECTOR VALUE #enter
+"#mode"    DOCUMENT QUERY-SELECTOR VALUE #mode
 
 
 \\ Input / Output
@@ -1321,7 +1356,7 @@ VARIABLE LineIndex
   #input FOCUS ;
 
 : STEP-INPUT { step -- }
-  ".input-line" QUERY-ALL { inputs }
+  ".input-line" DOCUMENT QUERY-ALL { inputs }
   LineIndex ?             { index }
   index step + inputs ? UNDEFINED = IF 
     CLEAR-INPUT
