@@ -7,6 +7,8 @@ system.parse(`
 OBJECT VALUE Names
 OBJECT VALUE Users
 
+OBJECT :VARIABLE Channels
+
 : DROP-COLON { token -- token }
   token IF
     0 token ? ":" = IF
@@ -192,34 +194,55 @@ OBJECT VALUE Users
   <[ "REGISTERED" nick ]> " " JOIN { message }
   message nick #view MESSAGE ;
 
+: PARSE-LIST { source type remaining -- }
+  1 remaining ? { channel }
+  <{
+    "users" 2 remaining ?
+    "topic" 3 remaining SLICE " " JOIN DROP-COLON
+  }> channel Channels ? ! ;
+
+: PARSE-END-LIST { source type remaining -- }
+  Channels ? KEYS SORT         { names }
+  BEGIN names COUNT WHILE
+    names POP                  { name }
+    name Channels ? ?          { channel }
+    "users" channel ?          { users }
+    "topic" channel ?          { topic }
+    <[ users topic ]> " " JOIN { info }
+    info name #view MESSAGE
+  REPEAT
+  OBJECT Channels ! ;
+
 : IGNORE-LINE { source type remaining -- } ;
 
 <{
-   "JOIN"    ' PARSE-MOVEMENT
-   "PART"    ' PARSE-MOVEMENT
-   "MODE"    ' PARSE-MODE
-   "PRIVMSG" ' PARSE-MESSAGE
-   "NOTICE"  ' PARSE-MESSAGE
-   "331"     ' PARSE-INFO
-   "332"     ' PARSE-TOPIC
-   "353"     ' PARSE-NAMES
-   "366"     ' PARSE-END-NAMES
-   "352"     ' PARSE-WHO
-   "315"     ' PARSE-END-WHO
-   "311"     ' PARSE-WHOIS-USER
-   "314"     ' PARSE-WHOIS-USER
-   "319"     ' PARSE-WHOIS-CHANNELS
-   "312"     ' PARSE-WHOIS-SERVER
-   "671"     ' PARSE-WHOIS-CONNECTION
-   "378"     ' PARSE-WHOIS-HOST
-   "338"     ' PARSE-WHOIS-ACTUALLY
-   "317"     ' PARSE-WHOIS-IDLE
-   "330"     ' PARSE-WHOIS-ACCOUNT
-   "307"     ' PARSE-WHOIS-REGISTERED
-   "301"     ' PARSE-AWAY
-   "318"     ' IGNORE-LINE
-   "333"     ' IGNORE-LINE
-   "369"     ' IGNORE-LINE
+  "JOIN"    ' PARSE-MOVEMENT
+  "PART"    ' PARSE-MOVEMENT
+  "MODE"    ' PARSE-MODE
+  "PRIVMSG" ' PARSE-MESSAGE
+  "NOTICE"  ' PARSE-MESSAGE
+  "331"     ' PARSE-INFO
+  "332"     ' PARSE-TOPIC
+  "353"     ' PARSE-NAMES
+  "366"     ' PARSE-END-NAMES
+  "352"     ' PARSE-WHO
+  "315"     ' PARSE-END-WHO
+  "311"     ' PARSE-WHOIS-USER
+  "314"     ' PARSE-WHOIS-USER
+  "319"     ' PARSE-WHOIS-CHANNELS
+  "312"     ' PARSE-WHOIS-SERVER
+  "671"     ' PARSE-WHOIS-CONNECTION
+  "378"     ' PARSE-WHOIS-HOST
+  "338"     ' PARSE-WHOIS-ACTUALLY
+  "317"     ' PARSE-WHOIS-IDLE
+  "330"     ' PARSE-WHOIS-ACCOUNT
+  "307"     ' PARSE-WHOIS-REGISTERED
+  "301"     ' PARSE-AWAY
+  "322"     ' PARSE-LIST
+  "323"     ' PARSE-END-LIST
+  "318"     ' IGNORE-LINE
+  "333"     ' IGNORE-LINE
+  "369"     ' IGNORE-LINE
 }>
 VALUE LineTypes
 

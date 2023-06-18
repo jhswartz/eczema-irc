@@ -3,6 +3,9 @@ system.parse(`
 : /quit { message -- }
   <[ "QUIT :" message ]> "" JOIN SEND ;
 
+: /list { pattern -- }
+  <[ "LIST" pattern ]> " " JOIN SEND ;
+
 : /part { channel -- }
   <[ "PART" channel ]> " " JOIN SEND ;
 
@@ -33,6 +36,15 @@ system.parse(`
 : /nick { nick -- }
   <[ "NICK" nick ]> " " JOIN SEND ;
 
+: /identify { account password -- }
+  <[ "IDENTIFY" account password ]> " " JOIN "NickServ" /msg ;
+
+: /release { account password -- }
+  <[ "RELEASE" account password ]> " " JOIN "NickServ" /msg ;
+
+: /ghost { account password -- }
+  <[ "GHOST" account password ]> " " JOIN "NickServ" /msg ;
+
 : /colour { colour target -- }
   colour target TargetColour ? !
   REFRESH ;
@@ -50,14 +62,5 @@ system.parse(`
   OBJECT TargetOpacity !
   1.000 DefaultOpacity !
   REFRESH ;
-
-: /identify { account password -- }
-  <[ "IDENTIFY" account password ]> " " JOIN "NickServ" /msg ;
-
-: /release { account password -- }
-  <[ "RELEASE" account password ]> " " JOIN "NickServ" /msg ;
-
-: /ghost { account password -- }
-  <[ "GHOST" account password ]> " " JOIN "NickServ" /msg ;
 
 `);
