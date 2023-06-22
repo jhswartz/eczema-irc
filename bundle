@@ -1,0 +1,6 @@
+#!/bin/sh
+
+cat books/irc.fs \
+    books/parse.fs \
+    books/commands.fs \
+    books/view.fs > eczema-irc.js
