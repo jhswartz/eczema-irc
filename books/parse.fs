@@ -1,9 +1,5 @@
 system.parse(`
 
-86400 VALUE SECONDS/DAY
-3600  VALUE SECONDS/HOUR
-60    VALUE SECONDS/MINUTE
-
 OBJECT VALUE Names
 OBJECT VALUE Users
 
@@ -16,23 +12,6 @@ OBJECT :VARIABLE Channels
     THEN
   THEN
   token ;
-
-: DAYS? { seconds -- days }
-  seconds SECONDS/DAY / FLOOR ;
-
-: HOURS? { seconds -- hours }
-  seconds SECONDS/DAY  MOD
-          SECONDS/HOUR / FLOOR ;
-
-: MINUTES? { seconds -- hours }
-  seconds SECONDS/DAY    MOD
-          SECONDS/HOUR   MOD
-          SECONDS/MINUTE / FLOOR ;
-
-: SECONDS? { seconds -- hours }
-  seconds SECONDS/DAY    MOD
-          SECONDS/HOUR   MOD
-          SECONDS/MINUTE MOD ;
 
 : PONG { type -- }
   <[ "PONG" type ]> " " JOIN { message }
@@ -252,8 +231,6 @@ VALUE LineTypes
   0 tokens ? DROP-COLON { source }
   1 tokens ?            { type }
   2 tokens SLICE        { remaining }
-
-  \\ tokens .
 
   source "PING" = IF
     type PONG

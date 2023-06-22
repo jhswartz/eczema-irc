@@ -97,6 +97,4 @@ OBJECT :VARIABLE TargetColour
     THEN
   REPEAT ;
 
-"WORDS?" READ
-
 `);
