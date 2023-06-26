@@ -1,5 +1,7 @@
 system.parse(`
 
+TRUE   :VARIABLE AutoScroll
+
 1.000  :VARIABLE DefaultOpacity
 OBJECT :VARIABLE TargetOpacity
 OBJECT :VARIABLE TargetColour
@@ -69,7 +71,9 @@ OBJECT :VARIABLE TargetColour
   element ;
 
 : SCROLL-VIEW ( -- )
-  "scrollHeight" #view ? "scrollTop" #view ! ;
+  AutoScroll ? IF
+    "scrollHeight" #view ? "scrollTop" #view !
+  THEN ;
 
 : MESSAGE { message target panel -- }
   message target MESSAGE>ELEMENT { element }
