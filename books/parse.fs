@@ -141,6 +141,11 @@ OBJECT :VARIABLE Channels
   2 remaining SLICE " " JOIN DROP-COLON { message }
   message nick #view MESSAGE ;
 
+: PARSE-WHOIS-MODE { source type remaining -- }
+  1 remaining ?                         { nick }
+  2 remaining SLICE " " JOIN DROP-COLON { message }
+  message nick #view MESSAGE ;
+
 : PARSE-WHOIS-HOST { source type remaining -- }
   1 remaining ?                         { nick }
   2 remaining SLICE " " JOIN DROP-COLON { message }
@@ -219,6 +224,7 @@ OBJECT :VARIABLE Channels
   "319"     ' PARSE-WHOIS-CHANNELS
   "312"     ' PARSE-WHOIS-SERVER
   "671"     ' PARSE-WHOIS-CONNECTION
+  "379"     ' PARSE-WHOIS-MODE
   "378"     ' PARSE-WHOIS-HOST
   "338"     ' PARSE-WHOIS-ACTUALLY
   "317"     ' PARSE-WHOIS-IDLE

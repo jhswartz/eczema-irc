@@ -184,6 +184,11 @@ OBJECT :VARIABLE Channels
   2 remaining SLICE " " JOIN DROP-COLON { message }
   message nick #view MESSAGE ;
 
+: PARSE-WHOIS-MODE { source type remaining -- }
+  1 remaining ?                         { nick }
+  2 remaining SLICE " " JOIN DROP-COLON { message }
+  message nick #view MESSAGE ;
+
 : PARSE-WHOIS-HOST { source type remaining -- }
   1 remaining ?                         { nick }
   2 remaining SLICE " " JOIN DROP-COLON { message }
@@ -262,6 +267,7 @@ OBJECT :VARIABLE Channels
   "319"     ' PARSE-WHOIS-CHANNELS
   "312"     ' PARSE-WHOIS-SERVER
   "671"     ' PARSE-WHOIS-CONNECTION
+  "379"     ' PARSE-WHOIS-MODE
   "378"     ' PARSE-WHOIS-HOST
   "338"     ' PARSE-WHOIS-ACTUALLY
   "317"     ' PARSE-WHOIS-IDLE
@@ -301,6 +307,12 @@ system.parse(`
 : /quit { message -- }
   <[ "QUIT :" message ]> "" JOIN SEND ;
 
+: /mode? { target -- }
+  <[ "MODE" target ]> " " JOIN SEND ;
+
+: /mode! { mode target -- }
+  <[ "MODE " target " :" mode ]> "" JOIN SEND ;
+
 : /list { pattern -- }
   <[ "LIST" pattern ]> " " JOIN SEND ;
 
@@ -310,8 +322,11 @@ system.parse(`
 : /join { channel -- }
   <[ "JOIN" channel ]> " " JOIN SEND ;
 
-: /topic { channel -- }
+: /topic? { channel -- }
   <[ "TOPIC" channel ]> " " JOIN SEND ;
+
+: /topic! { topic channel -- }
+  <[ "TOPIC " channel " :" topic ]> "" JOIN SEND ;
 
 : /msg { message target -- }
   <[ "PRIVMSG " target " :" message ]> "" JOIN SEND ; 

@@ -3,6 +3,12 @@ system.parse(`
 : /quit { message -- }
   <[ "QUIT :" message ]> "" JOIN SEND ;
 
+: /mode? { target -- }
+  <[ "MODE" target ]> " " JOIN SEND ;
+
+: /mode! { mode target -- }
+  <[ "MODE " target " :" mode ]> "" JOIN SEND ;
+
 : /list { pattern -- }
   <[ "LIST" pattern ]> " " JOIN SEND ;
 
@@ -12,8 +18,11 @@ system.parse(`
 : /join { channel -- }
   <[ "JOIN" channel ]> " " JOIN SEND ;
 
-: /topic { channel -- }
+: /topic? { channel -- }
   <[ "TOPIC" channel ]> " " JOIN SEND ;
+
+: /topic! { topic channel -- }
+  <[ "TOPIC " channel " :" topic ]> "" JOIN SEND ;
 
 : /msg { message target -- }
   <[ "PRIVMSG " target " :" message ]> "" JOIN SEND ; 
