@@ -29,9 +29,16 @@ OBJECT :VARIABLE Channels
   message channel #view MESSAGE ;
 
 : PARSE-TOPIC { source type remaining -- }
+  1 remaining ?                         { channel }
+  2 remaining SLICE " " JOIN DROP-COLON { topic }
+  <[ "TOPIC" topic ]> " " JOIN          { message }
+  message channel #view MESSAGE ;
+
+: PARSE-TOPIC-SET-BY { source type remaining -- }
   1 remaining ?                { channel }
-  2 remaining SLICE " " JOIN   { topic }
-  <[ "TOPIC" topic ]> " " JOIN { message }
+  2 remaining ?                { user }
+  3 remaining ?                { at }
+  <[ "SET-BY" user ]> " " JOIN { message }
   message channel #view MESSAGE ;
 
 : PARSE-MODE { source type remaining -- }
@@ -202,6 +209,7 @@ OBJECT :VARIABLE Channels
   "NOTICE"  ' PARSE-MESSAGE
   "331"     ' PARSE-INFO
   "332"     ' PARSE-TOPIC
+  "333"     ' PARSE-TOPIC-SET-BY
   "353"     ' PARSE-NAMES
   "366"     ' PARSE-END-NAMES
   "352"     ' PARSE-WHO
@@ -220,7 +228,6 @@ OBJECT :VARIABLE Channels
   "322"     ' PARSE-LIST
   "323"     ' PARSE-END-LIST
   "318"     ' IGNORE-LINE
-  "333"     ' IGNORE-LINE
   "369"     ' IGNORE-LINE
 }>
 VALUE LineTypes
