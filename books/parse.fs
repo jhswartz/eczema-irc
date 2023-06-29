@@ -207,36 +207,36 @@ OBJECT :VARIABLE Channels
 : IGNORE-LINE { source type remaining -- } ;
 
 <{
-  "JOIN"    ' PARSE-MOVEMENT
-  "PART"    ' PARSE-MOVEMENT
-  "MODE"    ' PARSE-MODE
-  "PRIVMSG" ' PARSE-MESSAGE
-  "NOTICE"  ' PARSE-MESSAGE
-  "331"     ' PARSE-INFO
-  "332"     ' PARSE-TOPIC
-  "333"     ' PARSE-TOPIC-SET-BY
-  "353"     ' PARSE-NAMES
-  "366"     ' PARSE-END-NAMES
-  "352"     ' PARSE-WHO
-  "315"     ' PARSE-END-WHO
-  "311"     ' PARSE-WHOIS-USER
-  "314"     ' PARSE-WHOIS-USER
-  "319"     ' PARSE-WHOIS-CHANNELS
-  "312"     ' PARSE-WHOIS-SERVER
-  "671"     ' PARSE-WHOIS-CONNECTION
-  "379"     ' PARSE-WHOIS-MODE
-  "378"     ' PARSE-WHOIS-HOST
-  "338"     ' PARSE-WHOIS-ACTUALLY
-  "317"     ' PARSE-WHOIS-IDLE
-  "330"     ' PARSE-WHOIS-ACCOUNT
-  "307"     ' PARSE-WHOIS-REGISTERED
-  "301"     ' PARSE-AWAY
-  "322"     ' PARSE-LIST
-  "323"     ' PARSE-END-LIST
-  "318"     ' IGNORE-LINE
-  "369"     ' IGNORE-LINE
+  "JOIN"    "PARSE-MOVEMENT"
+  "PART"    "PARSE-MOVEMENT"
+  "MODE"    "PARSE-MODE"
+  "PRIVMSG" "PARSE-MESSAGE"
+  "NOTICE"  "PARSE-MESSAGE"
+  "331"     "PARSE-INFO"
+  "332"     "PARSE-TOPIC"
+  "333"     "PARSE-TOPIC-SET-BY"
+  "353"     "PARSE-NAMES"
+  "366"     "PARSE-END-NAMES"
+  "352"     "PARSE-WHO"
+  "315"     "PARSE-END-WHO"
+  "311"     "PARSE-WHOIS-USER"
+  "314"     "PARSE-WHOIS-USER"
+  "319"     "PARSE-WHOIS-CHANNELS"
+  "312"     "PARSE-WHOIS-SERVER"
+  "671"     "PARSE-WHOIS-CONNECTION"
+  "379"     "PARSE-WHOIS-MODE"
+  "378"     "PARSE-WHOIS-HOST"
+  "338"     "PARSE-WHOIS-ACTUALLY"
+  "317"     "PARSE-WHOIS-IDLE"
+  "330"     "PARSE-WHOIS-ACCOUNT"
+  "307"     "PARSE-WHOIS-REGISTERED"
+  "301"     "PARSE-AWAY"
+  "322"     "PARSE-LIST"
+  "323"     "PARSE-END-LIST"
+  "318"     "IGNORE-LINE"
+  "369"     "IGNORE-LINE"
 }>
-VALUE LineTypes
+:VARIABLE LineTypes
 
 : PARSE-LINE { event -- }
   "data" event ?        { data }
@@ -250,9 +250,9 @@ VALUE LineTypes
     EXIT
   THEN
 
-  type LineTypes KEYS CONTAINS IF
-    type LineTypes ? { parser }
-    source type remaining parser EXECUTE
+  type LineTypes ? KEYS CONTAINS IF
+    type LineTypes ? ? { parser }
+    source type remaining parser EVALUATE
     EXIT
   THEN
 
