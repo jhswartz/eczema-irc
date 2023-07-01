@@ -256,6 +256,6 @@ OBJECT :VARIABLE Channels
     EXIT
   THEN
 
-  data InboundColour DefaultOpacity ? #view "unparsed" TEXT ;
+  data InboundColour #view "unparsed" TEXT ;
 
 `);

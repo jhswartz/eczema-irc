@@ -13,7 +13,7 @@ VARIABLE KeepAlive
 
 : SEND { message -- }
   message 1 "send" Socket ? METHOD
-  message OutboundColour DefaultOpacity ? #view "sent" TEXT ;
+  message OutboundColour #view "sent" TEXT ;
 
 : IDENTITY! { nick user name -- }
   nick YourNick ! user YourUser ! name YourName ! ;
@@ -27,7 +27,7 @@ VARIABLE KeepAlive
     KeepAlive ? CLEAR-INTERVAL
     UNDEFINED KeepAlive !
   THEN
-  "Disconnected!" AlertColour DefaultOpacity ? #view "alert" TEXT ;
+  "Disconnected!" AlertColour #view "alert" TEXT ;
 
 : CONNECT { uri -- web-socket }
   uri WEB-SOCKET { web-socket }
@@ -250,36 +250,36 @@ OBJECT :VARIABLE Channels
 : IGNORE-LINE { source type remaining -- } ;
 
 <{
-  "JOIN"    ' PARSE-MOVEMENT
-  "PART"    ' PARSE-MOVEMENT
-  "MODE"    ' PARSE-MODE
-  "PRIVMSG" ' PARSE-MESSAGE
-  "NOTICE"  ' PARSE-MESSAGE
-  "331"     ' PARSE-INFO
-  "332"     ' PARSE-TOPIC
-  "333"     ' PARSE-TOPIC-SET-BY
-  "353"     ' PARSE-NAMES
-  "366"     ' PARSE-END-NAMES
-  "352"     ' PARSE-WHO
-  "315"     ' PARSE-END-WHO
-  "311"     ' PARSE-WHOIS-USER
-  "314"     ' PARSE-WHOIS-USER
-  "319"     ' PARSE-WHOIS-CHANNELS
-  "312"     ' PARSE-WHOIS-SERVER
-  "671"     ' PARSE-WHOIS-CONNECTION
-  "379"     ' PARSE-WHOIS-MODE
-  "378"     ' PARSE-WHOIS-HOST
-  "338"     ' PARSE-WHOIS-ACTUALLY
-  "317"     ' PARSE-WHOIS-IDLE
-  "330"     ' PARSE-WHOIS-ACCOUNT
-  "307"     ' PARSE-WHOIS-REGISTERED
-  "301"     ' PARSE-AWAY
-  "322"     ' PARSE-LIST
-  "323"     ' PARSE-END-LIST
-  "318"     ' IGNORE-LINE
-  "369"     ' IGNORE-LINE
+  "JOIN"    "PARSE-MOVEMENT"
+  "PART"    "PARSE-MOVEMENT"
+  "MODE"    "PARSE-MODE"
+  "PRIVMSG" "PARSE-MESSAGE"
+  "NOTICE"  "PARSE-MESSAGE"
+  "331"     "PARSE-INFO"
+  "332"     "PARSE-TOPIC"
+  "333"     "PARSE-TOPIC-SET-BY"
+  "353"     "PARSE-NAMES"
+  "366"     "PARSE-END-NAMES"
+  "352"     "PARSE-WHO"
+  "315"     "PARSE-END-WHO"
+  "311"     "PARSE-WHOIS-USER"
+  "314"     "PARSE-WHOIS-USER"
+  "319"     "PARSE-WHOIS-CHANNELS"
+  "312"     "PARSE-WHOIS-SERVER"
+  "671"     "PARSE-WHOIS-CONNECTION"
+  "379"     "PARSE-WHOIS-MODE"
+  "378"     "PARSE-WHOIS-HOST"
+  "338"     "PARSE-WHOIS-ACTUALLY"
+  "317"     "PARSE-WHOIS-IDLE"
+  "330"     "PARSE-WHOIS-ACCOUNT"
+  "307"     "PARSE-WHOIS-REGISTERED"
+  "301"     "PARSE-AWAY"
+  "322"     "PARSE-LIST"
+  "323"     "PARSE-END-LIST"
+  "318"     "IGNORE-LINE"
+  "369"     "IGNORE-LINE"
 }>
-VALUE LineTypes
+:VARIABLE LineTypes
 
 : PARSE-LINE { event -- }
   "data" event ?        { data }
@@ -293,13 +293,13 @@ VALUE LineTypes
     EXIT
   THEN
 
-  type LineTypes KEYS CONTAINS IF
-    type LineTypes ? { parser }
-    source type remaining parser EXECUTE
+  type LineTypes ? KEYS CONTAINS IF
+    type LineTypes ? ? { parser }
+    source type remaining parser EVALUATE
     EXIT
   THEN
 
-  data InboundColour DefaultOpacity ? #view "unparsed" TEXT ;
+  data InboundColour #view "unparsed" TEXT ;
 
 `);
 system.parse(`
@@ -376,14 +376,25 @@ system.parse(`
   1.000 DefaultOpacity !
   REFRESH ;
 
+: /select { target -- }
+  target SelectedTarget !
+  "none" DefaultVisibility !
+  REFRESH SCROLL-VIEW ;
+
+: /deselect ( -- )
+  UNDEFINED SelectedTarget !
+  "block" DefaultVisibility !
+  REFRESH SCROLL-VIEW ;
+
 `);
 system.parse(`
 
-TRUE   :VARIABLE AutoScroll
-
-1.000  :VARIABLE DefaultOpacity
-OBJECT :VARIABLE TargetOpacity
-OBJECT :VARIABLE TargetColour
+TRUE      :VARIABLE AutoScroll
+UNDEFINED :VARIABLE SelectedTarget
+TRUE      :VARIABLE DefaultVisibility
+1.000     :VARIABLE DefaultOpacity
+OBJECT    :VARIABLE TargetOpacity
+OBJECT    :VARIABLE TargetColour
 
 "#666" VALUE TimestampColour
 "#ccc" VALUE InboundColour
@@ -405,15 +416,18 @@ OBJECT :VARIABLE TargetColour
   CURRENT-TIME element APPEND
   element ;
 
-: TEXT>ELEMENT { text colour opacity -- element }
+: TEXT>ELEMENT { text colour opacity visibility -- element }
   "p" CREATE-ELEMENT { element }
+  text element APPEND
   colour element COLOUR!
   opacity element OPACITY!
-  text element APPEND
+  visibility element DISPLAY!
   element ;
 
-: TEXT { message colour opacity panel class -- }
-  message colour opacity TEXT>ELEMENT { element }
+: TEXT { message colour panel class -- }
+  DefaultVisibility ?                            { visibility }
+  DefaultOpacity ?                               { opacity }
+  message colour opacity visibility TEXT>ELEMENT { element }
   TIMESTAMP-ELEMENT element PREPEND
   class element CLASS!
   element panel APPEND
@@ -433,6 +447,16 @@ OBJECT :VARIABLE TargetColour
     DefaultOpacity ?
   THEN ;
 
+: TARGET-VISIBILITY? { target -- }
+  UNDEFINED SelectedTarget ? = { undefined }
+  target    SelectedTarget ? = { matched }
+
+  matched undefined OR IF
+    "block"
+  ELSE
+    "none"
+  THEN ;
+
 : TARGET>ELEMENT { target -- element }
   "span" CREATE-ELEMENT { element }
   target TARGET-COLOUR? { colour }
@@ -442,9 +466,10 @@ OBJECT :VARIABLE TargetColour
   element ;
 
 : MESSAGE>ELEMENT { text target -- element }
-  target TARGET>ELEMENT                   { targetElement }
-  target TARGET-OPACITY?                  { opacity }
-  text InboundColour opacity TEXT>ELEMENT { element }
+  target TARGET>ELEMENT                              { targetElement }
+  target TARGET-VISIBILITY?                          { visibility }
+  target TARGET-OPACITY?                             { opacity }
+  text InboundColour opacity visibility TEXT>ELEMENT { element }
   targetElement element PREPEND
   "message" element CLASS!
   element ;
@@ -460,15 +485,20 @@ OBJECT :VARIABLE TargetColour
   element panel APPEND
   SCROLL-VIEW ;
 
-: REFRESH { -- }
+: REFRESH ( -- )
   "#view p" DOCUMENT QUERY-ALL TO-ARRAY { lines }
 
   BEGIN lines COUNT WHILE
     lines POP   { line }
     line CLASS? { class }
 
+    "block" line DISPLAY!
+
     "message" class <> IF
       DefaultOpacity ? line OPACITY!
+      SelectedTarget ? IF
+        "none" line DISPLAY!
+      THEN
 
     ELSE
       ".target" line QUERY-SELECTOR { element }
@@ -477,6 +507,12 @@ OBJECT :VARIABLE TargetColour
       target TARGET-COLOUR?         { colour }
       colour element COLOUR!
       opacity line OPACITY!
+
+      SelectedTarget ? IF
+        target SelectedTarget ? <> IF
+          "none" line DISPLAY!
+        THEN
+      THEN
     THEN
   REPEAT ;
 

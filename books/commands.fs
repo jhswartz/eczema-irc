@@ -72,4 +72,14 @@ system.parse(`
   1.000 DefaultOpacity !
   REFRESH ;
 
+: /select { target -- }
+  target SelectedTarget !
+  "none" DefaultVisibility !
+  REFRESH SCROLL-VIEW ;
+
+: /deselect ( -- )
+  UNDEFINED SelectedTarget !
+  "block" DefaultVisibility !
+  REFRESH SCROLL-VIEW ;
+
 `);
