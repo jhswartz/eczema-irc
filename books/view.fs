@@ -14,17 +14,11 @@ OBJECT    :VARIABLE TargetColour
 
 "#view" DOCUMENT QUERY-SELECTOR VALUE #view
 
-: CURRENT-TIME { -- timestamp }
-  0 "Date" NEW                        { date }
-  0 "getHours"   date METHOD "00" FIT { hour }
-  0 "getMinutes" date METHOD "00" FIT { minute }
-  0 "getSeconds" date METHOD "00" FIT { seconds }
-  <[ hour ":" minute ":" seconds " " ]> "" JOIN ;
-
 : TIMESTAMP-ELEMENT { -- element }
   "span" CREATE-ELEMENT { element }
   TimestampColour element COLOUR!
-  CURRENT-TIME element APPEND
+  HH:MM:SS element APPEND
+  " " element APPEND
   element ;
 
 : TEXT>ELEMENT { text colour opacity visibility -- element }
