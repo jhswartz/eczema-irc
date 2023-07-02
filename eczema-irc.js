@@ -442,21 +442,17 @@ OBJECT    :VARIABLE TargetColour
   THEN ;
 
 : TARGET-VISIBILITY? { target -- }
-  UNDEFINED SelectedTarget ? = { undefined }
+  UNDEFINED SelectedTarget ? = { untargetted }
   target    SelectedTarget ? = { matched }
-
-  matched undefined OR IF
-    "block"
-  ELSE
-    "none"
-  THEN ;
+  untargetted matched OR IF "block" ELSE "none" THEN ;
 
 : TARGET>ELEMENT { target -- element }
   "span" CREATE-ELEMENT { element }
   target TARGET-COLOUR? { colour }
   colour element COLOUR!
   "target" element CLASS!
-  <[ target " " ]> "" JOIN element APPEND
+  target element APPEND
+  " " element APPEND
   element ;
 
 : MESSAGE>ELEMENT { text target -- element }
@@ -479,35 +475,31 @@ OBJECT    :VARIABLE TargetColour
   element panel APPEND
   SCROLL-VIEW ;
 
+: REFRESH-MESSAGE { line -- }
+  ".target" line QUERY-SELECTOR { element }
+  element TEXT? TRIM            { target }
+  target TARGET-VISIBILITY?     { visibility }
+  target TARGET-OPACITY?        { opacity }
+  target TARGET-COLOUR?         { colour }
+  colour element COLOUR!
+  opacity line OPACITY!
+  visibility line DISPLAY! ;
+
+: REFRESH-LINE { line -- }
+  DefaultOpacity ? line OPACITY!
+  SelectedTarget ? IF "none" ELSE "block" THEN
+  line DISPLAY! ;
+
 : REFRESH ( -- )
   "#view p" DOCUMENT QUERY-ALL TO-ARRAY { lines }
-
   BEGIN lines COUNT WHILE
     lines POP   { line }
     line CLASS? { class }
-
-    "block" line DISPLAY!
-
-    "message" class <> IF
-      DefaultOpacity ? line OPACITY!
-      SelectedTarget ? IF
-        "none" line DISPLAY!
-      THEN
-
+    "message" class = IF
+      line REFRESH-MESSAGE
     ELSE
-      ".target" line QUERY-SELECTOR { element }
-      element TEXT? TRIM            { target }
-      target TARGET-OPACITY?        { opacity }
-      target TARGET-COLOUR?         { colour }
-      colour element COLOUR!
-      opacity line OPACITY!
-
-      SelectedTarget ? IF
-        target SelectedTarget ? <> IF
-          "none" line DISPLAY!
-        THEN
-      THEN
-    THEN
+      line REFRESH-LINE
+     THEN
   REPEAT ;
 
 `);
