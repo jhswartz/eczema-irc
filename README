@@ -66,6 +66,16 @@ HIGHLIGHTING
     /defocus
 
 
+  Display only messages received from a single source.
+
+    "CozySupermarket" /select
+
+
+  Display everything.
+
+    /deselect
+
+
 TRY IT OUT
 
   https://risingedge.co.za/eczema/irc/
